@@ -85,15 +85,14 @@ function patchCodeJs(tokens) {
   const newBlock = `// GENERATED — do not edit by hand; run: npm run build\nconst utopiaTokens = [\n${rows}\n];`;
 
   // Replace the block between the two sentinel comments (or the array declaration itself)
-  const updated = code.replace(
-    /\/\/ GENERATED[^\n]*\nconst utopiaTokens = \[[\s\S]*?\];|const utopiaTokens = \[[\s\S]*?\];/,
-    newBlock,
-  );
+  const re = /\/\/ GENERATED[^\n]*\nconst utopiaTokens = \[[\s\S]*?\];|const utopiaTokens = \[[\s\S]*?\];/;
 
-  if (updated === code) {
+  if (!re.test(code)) {
     console.error("❌ Could not find utopiaTokens array in plugin/code.js");
     process.exit(1);
   }
+
+  const updated = code.replace(re, newBlock);
 
   writeFileSync(codePath, updated);
 }

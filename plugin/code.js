@@ -81,17 +81,17 @@ function importTailwindSpacing() {
 function importUtopiaSpacing() {
   console.log("[utopia] creating collection...");
   const collection = figma.variables.createVariableCollection("Utopia Spacing");
-  const xsModeId = collection.defaultModeId;
-  collection.renameMode(xsModeId, "xs — 480px");
-  const xlModeId = collection.addMode("xl — 1280px");
-  console.log("[utopia] collection created, modes:", xsModeId, xlModeId);
+  const xlModeId = collection.defaultModeId;
+  collection.renameMode(xlModeId, "xl — 1280px");
+  const xsModeId = collection.addMode("xs — 480px");
+  console.log("[utopia] collection created, modes:", xlModeId, xsModeId);
 
   for (const [name, xsPx, xlPx] of utopiaTokens) {
     try {
       console.log(`[utopia] creating variable: "space-${name}"`);
       const variable = figma.variables.createVariable(`space-${name}`, collection, "FLOAT");
-      variable.setValueForMode(xsModeId, xsPx);
       variable.setValueForMode(xlModeId, xlPx);
+      variable.setValueForMode(xsModeId, xsPx);
       variable.description = `xs: ${xsPx}px → xl: ${xlPx}px`;
       console.log(`[utopia] ✓ "space-${name}"`);
     } catch (err) {
