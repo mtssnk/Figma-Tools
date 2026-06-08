@@ -107,8 +107,8 @@ function importUtopiaSpacing() {
 
 try {
   console.log("=== Import Spacing Variables ===");
-  importTailwindSpacing();
   importUtopiaSpacing();
+  importTailwindSpacing();
   console.log("=== Complete ===");
   figma.notify("✅ Spacing variables imported successfully!");
 } catch (err) {
