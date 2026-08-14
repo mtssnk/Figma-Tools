@@ -1,0 +1,72 @@
+<style>
+  body {
+    font-family: Inter, sans-serif;
+    font-size: 12px;
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  h2 {
+    font-size: 13px;
+    margin: 0;
+  }
+  #list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .count {
+    color: #888;
+  }
+  button {
+    background: #18a0fb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  button:disabled {
+    background: #ccc;
+    cursor: default;
+  }
+</style>
+
+<h2>Select collections to import</h2>
+<div id="list">Loading…</div>
+<button id="import" disabled>Import</button>
+
+<script>
+  const list = document.getElementById("list");
+  const importButton = document.getElementById("import");
+
+  window.onmessage = (event) => {
+    const msg = event.data.pluginMessage;
+    if (msg.type !== "init") return;
+
+    list.innerHTML = "";
+    for (const { name, count } of msg.collections) {
+      const label = document.createElement("label");
+      label.innerHTML = `
+        <input type="checkbox" value="${name}" checked />
+        ${name} <span class="count">(${count})</span>
+      `;
+      list.appendChild(label);
+    }
+    importButton.disabled = msg.collections.length === 0;
+  };
+
+  importButton.onclick = () => {
+    const names = Array.from(list.querySelectorAll("input:checked")).map((el) => el.value);
+    parent.postMessage({ pluginMessage: { type: "import", names } }, "*");
+  };
+</script>

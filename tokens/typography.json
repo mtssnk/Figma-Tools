@@ -1,0 +1,30 @@
+{
+  "name": "Typography",
+  "modes": ["xl", "xs"],
+  "variables": [
+    { "name": "font/weight/light", "type": "STRING", "values": { "xl": "Light", "xs": "Light" } },
+    { "name": "font/weight/regular", "type": "STRING", "values": { "xl": "Regular", "xs": "Regular" } },
+    { "name": "font/weight/semibold", "type": "STRING", "values": { "xl": "Semibold", "xs": "Semibold" } },
+    { "name": "font/weight/bold", "type": "STRING", "values": { "xl": "Bold", "xs": "Bold" } },
+    { "name": "font/weight/light-extended", "type": "STRING", "values": { "xl": "Light Extended", "xs": "Light Extended" } },
+    { "name": "font/weight/semibold-extended", "type": "STRING", "values": { "xl": "Semibold Extended", "xs": "Semibold Extended" } },
+
+    { "name": "font/family/extended", "type": "STRING", "values": { "xl": "New Science", "xs": "New Science" } },
+    { "name": "font/family/body", "type": "STRING", "values": { "xl": "Acumin Pro", "xs": "Acumin Pro" } },
+    { "name": "font/family/serif", "type": "STRING", "values": { "xl": "Orpheus Pro", "xs": "Orpheus Pro" } },
+    { "name": "font/family/mono", "type": "STRING", "values": { "xl": "New Science Mono", "xs": "New Science Mono" } },
+
+    { "name": "font/size/5xl", "type": "FLOAT", "values": { "xl": 120, "xs": 77 } },
+    { "name": "font/size/4xl", "type": "FLOAT", "values": { "xl": 96, "xs": 64 } },
+    { "name": "font/size/3xl", "type": "FLOAT", "values": { "xl": 76, "xs": 54 } },
+    { "name": "font/size/2xl", "type": "FLOAT", "values": { "xl": 62, "xs": 44 } },
+    { "name": "font/size/xl", "type": "FLOAT", "values": { "xl": 48, "xs": 36 } },
+    { "name": "font/size/lg", "type": "FLOAT", "values": { "xl": 40, "xs": 30 } },
+    { "name": "font/size/md", "type": "FLOAT", "values": { "xl": 32, "xs": 26 } },
+    { "name": "font/size/sm", "type": "FLOAT", "values": { "xl": 24, "xs": 22 } },
+    { "name": "font/size/xs", "type": "FLOAT", "values": { "xl": 20, "xs": 18 } },
+    { "name": "font/size/2xs", "type": "FLOAT", "values": { "xl": 16, "xs": 16 } },
+    { "name": "font/size/3xs", "type": "FLOAT", "values": { "xl": 14, "xs": 14 } },
+    { "name": "font/size/4xs", "type": "FLOAT", "values": { "xl": 12, "xs": 12 } }
+  ]
+}

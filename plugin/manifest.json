@@ -1,7 +1,8 @@
 {
-  "name": "Import Spacing Variables",
+  "name": "Import Variables",
   "id": "spacing-import-plugin",
   "api": "1.0.0",
   "main": "code.js",
+  "ui": "ui.html",
   "editorType": ["figma"]
 }

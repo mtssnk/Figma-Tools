@@ -1,0 +1,99 @@
+{
+  "name": "Utopia Spacing",
+  "modes": [
+    "xl — 1280px",
+    "xs — 480px"
+  ],
+  "variables": [
+    {
+      "name": "space-5xs",
+      "type": "FLOAT",
+      "values": {
+        "xl — 1280px": 18,
+        "xs — 480px": 10
+      },
+      "description": "xs: 10px → xl: 18px"
+    },
+    {
+      "name": "space-4xs",
+      "type": "FLOAT",
+      "values": {
+        "xl — 1280px": 25,
+        "xs — 480px": 15
+      },
+      "description": "xs: 15px → xl: 25px"
+    },
+    {
+      "name": "space-3xs",
+      "type": "FLOAT",
+      "values": {
+        "xl — 1280px": 35,
+        "xs — 480px": 20
+      },
+      "description": "xs: 20px → xl: 35px"
+    },
+    {
+      "name": "space-2xs",
+      "type": "FLOAT",
+      "values": {
+        "xl — 1280px": 50,
+        "xs — 480px": 29
+      },
+      "description": "xs: 29px → xl: 50px"
+    },
+    {
+      "name": "space-xs",
+      "type": "FLOAT",
+      "values": {
+        "xl — 1280px": 70,
+        "xs — 480px": 40
+      },
+      "description": "xs: 40px → xl: 70px"
+    },
+    {
+      "name": "space-s",
+      "type": "FLOAT",
+      "values": {
+        "xl — 1280px": 98,
+        "xs — 480px": 56
+      },
+      "description": "xs: 56px → xl: 98px"
+    },
+    {
+      "name": "space-m",
+      "type": "FLOAT",
+      "values": {
+        "xl — 1280px": 137,
+        "xs — 480px": 78
+      },
+      "description": "xs: 78px → xl: 137px"
+    },
+    {
+      "name": "space-l",
+      "type": "FLOAT",
+      "values": {
+        "xl — 1280px": 192,
+        "xs — 480px": 110
+      },
+      "description": "xs: 110px → xl: 192px"
+    },
+    {
+      "name": "space-xl",
+      "type": "FLOAT",
+      "values": {
+        "xl — 1280px": 269,
+        "xs — 480px": 153
+      },
+      "description": "xs: 153px → xl: 269px"
+    },
+    {
+      "name": "space-2xl",
+      "type": "FLOAT",
+      "values": {
+        "xl — 1280px": 376,
+        "xs — 480px": 215
+      },
+      "description": "xs: 215px → xl: 376px"
+    }
+  ]
+}

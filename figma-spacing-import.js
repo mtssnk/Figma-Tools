@@ -15,6 +15,8 @@
  */
 
 import dotenv from "dotenv";
+import { readFileSync } from "fs";
+
 dotenv.config();
 
 // ─── CONFIG (from .env) ────────────────────────────────────────────────────
@@ -39,22 +41,18 @@ if (!FILE_KEY || !FIGMA_TOKEN) {
   process.exit(1);
 }
 
-// ─── TOKENS ────────────────────────────────────────────────────────────────
-// Spacing tokens: [name, xsPx, xlPx]
-// xs = 480px viewport, xl = 1280px viewport
+// ─── TOKENS (from tokens/utopia.json, kept in sync by `npm run build`) ─────
+// xl = 1280px viewport, xs = 480px viewport
 
-const tokens = [
-  ["5xs", 10, 18],
-  ["4xs", 15, 25],
-  ["3xs", 20, 35],
-  ["2xs", 29, 50],
-  ["xs", 40, 71],
-  ["s", 56, 98],
-  ["m", 78, 137],
-  ["l", 110, 192],
-  ["xl", 153, 269],
-  ["2xl", 215, 376],
-];
+const utopiaCollectionPath = new URL("./tokens/utopia.json", import.meta.url);
+const utopiaCollection = JSON.parse(readFileSync(utopiaCollectionPath, "utf-8"));
+
+// [name, xsPx, xlPx] — name already includes the "space-" prefix
+const tokens = utopiaCollection.variables.map((v) => [
+  v.name,
+  v.values["xs — 480px"],
+  v.values["xl — 1280px"],
+]);
 
 // ─── BUILD PAYLOAD ──────────────────────────────────────────────────────────
 
@@ -92,7 +90,7 @@ function buildPayload() {
     payload.variables.push({
       action: "CREATE",
       id: variableId,
-      name: `space-${name}`,
+      name,
       variableCollectionId: "spacing-collection",
       resolvedType: "FLOAT",
       description: `Utopia fluid space token. xs: ${xsPx}px → xl: ${xlPx}px`,
@@ -115,7 +113,7 @@ function preview(payload) {
   console.log("  ──────────┼────────────┼────────────");
   for (const [name, xsPx, xlPx] of tokens) {
     console.log(
-      `  space-${name.padEnd(4)} │  ${String(xsPx).padStart(3)}px      │  ${String(xlPx).padStart(3)}px`,
+      `  ${name.padEnd(11)} │  ${String(xsPx).padStart(3)}px      │  ${String(xlPx).padStart(3)}px`,
     );
   }
   console.log(`\n  ${tokens.length} tokens × 2 modes`);
@@ -155,7 +153,7 @@ async function importToFigma(payload) {
   console.log("  ──────────┼────────────┼────────────");
   for (const [name, xsPx, xlPx] of tokens) {
     console.log(
-      `  space-${name.padEnd(4)} │  ${String(xsPx).padStart(3)}px      │  ${String(xlPx).padStart(3)}px`,
+      `  ${name.padEnd(11)} │  ${String(xsPx).padStart(3)}px      │  ${String(xlPx).padStart(3)}px`,
     );
   }
   console.log(

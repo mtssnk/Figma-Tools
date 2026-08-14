@@ -1,7 +1,11 @@
 /**
  * build.js
- * Reads UTOPIA_SPACING from .env, computes spacing tokens from the URL
- * parameters, and writes them into plugin/code.js.
+ *
+ * 1. Reads UTOPIA_SPACING from .env, computes fluid spacing tokens, and
+ *    writes them to tokens/utopia.json.
+ * 2. Reads every tokens/*.json file, validates it against the shared
+ *    collection schema, and compiles them all into a single generated
+ *    block in plugin/code.js.
  *
  * Usage: npm run build
  *
@@ -13,17 +17,15 @@
  */
 
 import dotenv from "dotenv";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, readdirSync } from "fs";
 
 dotenv.config();
 
-const UTOPIA_URL = process.env.UTOPIA_SPACING;
-if (!UTOPIA_URL) {
-  console.error("❌ Missing UTOPIA_SPACING in .env");
-  process.exit(1);
-}
+const TOKENS_DIR = new URL("./tokens/", import.meta.url);
+const CODE_PATH = new URL("./plugin/code.js", import.meta.url).pathname;
+const SUPPORTED_TYPES = ["FLOAT", "STRING", "BOOLEAN", "COLOR"];
 
-// ─── PARSE URL ─────────────────────────────────────────────────────────────
+// ─── UTOPIA: COMPUTE FROM .env ─────────────────────────────────────────────
 
 function parseUtopiaUrl(urlString) {
   const url = new URL(urlString.trim());
@@ -41,9 +43,7 @@ function parseUtopiaUrl(urlString) {
   return { minSize, maxSize, negCustom, posCustom };
 }
 
-// ─── COMPUTE TOKENS ────────────────────────────────────────────────────────
-
-function computeTokens({ minSize, maxSize, negCustom, posCustom }) {
+function computeUtopiaTokens({ minSize, maxSize, negCustom, posCustom }) {
   const tokens = [];
 
   // Custom negative steps — sort ascending so we name them from furthest to closest:
@@ -72,42 +72,130 @@ function computeTokens({ minSize, maxSize, negCustom, posCustom }) {
   return tokens;
 }
 
-// ─── PATCH code.js ─────────────────────────────────────────────────────────
-
-function patchCodeJs(tokens) {
-  const codePath = new URL("./plugin/code.js", import.meta.url).pathname;
-  let code = readFileSync(codePath, "utf-8");
-
-  const rows = tokens
-    .map(([name, min, max]) => `  ["${name}", ${String(min).padStart(3)}, ${String(max).padStart(3)}],`)
-    .join("\n");
-
-  const newBlock = `// GENERATED — do not edit by hand; run: npm run build\nconst utopiaTokens = [\n${rows}\n];`;
-
-  // Replace the block between the two sentinel comments (or the array declaration itself)
-  const re = /\/\/ GENERATED[^\n]*\nconst utopiaTokens = \[[\s\S]*?\];|const utopiaTokens = \[[\s\S]*?\];/;
-
-  if (!re.test(code)) {
-    console.error("❌ Could not find utopiaTokens array in plugin/code.js");
+function buildUtopiaCollection() {
+  const UTOPIA_URL = process.env.UTOPIA_SPACING;
+  if (!UTOPIA_URL) {
+    console.error("❌ Missing UTOPIA_SPACING in .env");
     process.exit(1);
   }
 
-  const updated = code.replace(re, newBlock);
+  const config = parseUtopiaUrl(UTOPIA_URL);
+  const tokens = computeUtopiaTokens(config);
 
-  writeFileSync(codePath, updated);
+  console.log("\n📐 Computed Utopia spacing tokens:\n");
+  console.log("  Token     │ xs (min)   │ xl (max)");
+  console.log("  ──────────┼────────────┼────────────");
+  for (const [name, min, max] of tokens) {
+    console.log(`  ${`space-${name}`.padEnd(10)} │  ${String(min).padStart(3)}px      │  ${String(max).padStart(3)}px`);
+  }
+
+  const collection = {
+    name: "Utopia Spacing",
+    modes: ["xl — 1280px", "xs — 480px"],
+    variables: tokens.map(([name, xsPx, xlPx]) => ({
+      name: `space-${name}`,
+      type: "FLOAT",
+      values: { "xl — 1280px": xlPx, "xs — 480px": xsPx },
+      description: `xs: ${xsPx}px → xl: ${xlPx}px`,
+    })),
+  };
+
+  writeFileSync(
+    new URL("./utopia.json", TOKENS_DIR),
+    JSON.stringify(collection, null, 2) + "\n",
+  );
+  console.log("\n✅ tokens/utopia.json updated.");
+
+  return collection;
 }
 
-// ─── MAIN ──────────────────────────────────────────────────────────────────
+// ─── VALIDATE & COMPILE tokens/*.json ──────────────────────────────────────
 
-const config = parseUtopiaUrl(UTOPIA_URL);
-const tokens = computeTokens(config);
+function validateCollection(collection, filename) {
+  const errors = [];
 
-console.log("\n📐 Computed Utopia spacing tokens:\n");
-console.log("  Token     │ xs (min)   │ xl (max)");
-console.log("  ──────────┼────────────┼────────────");
-for (const [name, min, max] of tokens) {
-  console.log(`  ${`space-${name}`.padEnd(10)} │  ${String(min).padStart(3)}px      │  ${String(max).padStart(3)}px`);
+  if (!collection.name || typeof collection.name !== "string") {
+    errors.push("missing string `name`");
+  }
+  if (!Array.isArray(collection.modes) || collection.modes.length === 0) {
+    errors.push("`modes` must be a non-empty array");
+  }
+  if (!Array.isArray(collection.variables) || collection.variables.length === 0) {
+    errors.push("`variables` must be a non-empty array");
+  }
+
+  if (errors.length === 0) {
+    const seenNames = new Set();
+    for (const variable of collection.variables) {
+      const label = variable.name ?? "(unnamed)";
+
+      if (!variable.name || typeof variable.name !== "string") {
+        errors.push(`variable missing string \`name\``);
+        continue;
+      }
+      if (variable.name.includes(".")) {
+        errors.push(`"${label}": Figma variable names can't contain dots`);
+      }
+      if (seenNames.has(variable.name)) {
+        errors.push(`"${label}": duplicate variable name in this collection`);
+      }
+      seenNames.add(variable.name);
+
+      if (!SUPPORTED_TYPES.includes(variable.type)) {
+        errors.push(`"${label}": type must be one of ${SUPPORTED_TYPES.join(", ")}`);
+      }
+
+      for (const mode of collection.modes) {
+        if (!variable.values || !(mode in variable.values)) {
+          errors.push(`"${label}": missing value for mode "${mode}"`);
+        }
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    console.error(`❌ Invalid collection in tokens/${filename}:`);
+    for (const err of errors) console.error(`   - ${err}`);
+    process.exit(1);
+  }
 }
 
-patchCodeJs(tokens);
-console.log("\n✅ plugin/code.js updated. Re-run the plugin in Figma to apply changes.\n");
+function readTokenCollections() {
+  const files = readdirSync(TOKENS_DIR).filter((f) => f.endsWith(".json"));
+  const collections = [];
+
+  for (const filename of files) {
+    const raw = readFileSync(new URL(filename, TOKENS_DIR), "utf-8");
+    const collection = JSON.parse(raw);
+    validateCollection(collection, filename);
+    collections.push(collection);
+  }
+
+  return collections;
+}
+
+function patchCodeJs(collections) {
+  let code = readFileSync(CODE_PATH, "utf-8");
+
+  const newBlock = `// GENERATED — do not edit by hand; run: npm run build\nconst tokenCollections = ${JSON.stringify(collections, null, 2)};`;
+
+  const re = /\/\/ GENERATED[^\n]*\nconst tokenCollections = \[[\s\S]*?\];/;
+
+  if (!re.test(code)) {
+    console.error("❌ Could not find the GENERATED tokenCollections block in plugin/code.js");
+    process.exit(1);
+  }
+
+  code = code.replace(re, newBlock);
+  writeFileSync(CODE_PATH, code);
+}
+
+// ─── MAIN ───────────────────────────────────────────────────────────────────
+
+buildUtopiaCollection();
+
+const collections = readTokenCollections();
+patchCodeJs(collections);
+
+console.log(`\n✅ plugin/code.js updated with ${collections.length} collection(s): ${collections.map((c) => c.name).join(", ")}.`);
+console.log("Re-run the plugin in Figma to apply changes.\n");
